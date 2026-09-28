@@ -20,19 +20,20 @@ router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
-""" POST """
-@router.post("/setup_database",
-          tags=["Установка Базы Данных 💽"],
-          summary="Установить БД")
-async def setup_database():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        logger.info('База Данных деактивирована')
-        await conn.run_sync(Base.metadata.create_all)
-        logger.info('База данных создана')
-    return {
-        "ok": True,
-    }
+
+# """ POST """
+# @router.post("/setup_database",
+#           tags=["Установка Базы Данных 💽"],
+#           summary="Установить БД")
+# async def setup_database():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.drop_all)
+#         logger.info('База Данных деактивирована')
+#         await conn.run_sync(Base.metadata.create_all)
+#         logger.info('База данных создана')
+#     return {
+#         "ok": True,
+#     }
 
 
 """ POST """

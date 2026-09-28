@@ -18,3 +18,5 @@ database/*.db
 index_*.html
 testes.py
 .git/
+
+.env
