@@ -15,3 +15,5 @@ wheels/
 database/*.db
 index_*.html
 testes.py
+
+.env
