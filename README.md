@@ -1,7 +1,5 @@
 # 🌿 Habit Tracker
 
-Учебный проект для ресурса Solvate - [solvit.space/projects/habit_tracker](https://solvit.space)
-
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
@@ -24,6 +22,7 @@
 * **APScheduler** — фоновый планировщик задач (автоматически обновляет статусы привычек каждую ночь в 00:00)
 * **Pydantic v2** — валидация данных и сериализация
 * **Uvicorn** — асинхронный ASGI-сервер
+* **uv** — управление зависимостями и виртуальным окружением (`pyproject.toml`, `uv.lock`)
 * **Docker** — контейнеризация приложения
 
 ### **Frontend**
@@ -65,11 +64,16 @@ docker run -d -p 8000:8000 --name solvit_tracker_container habit-tracker-app
 ### Вариант 2: Локальный запуск (Классический) 💻
 
 ```bash
-# 1. Клонируйте репозиторий и перейдите в папку
+## 1. Клонируйте репозиторий и перейдите в папку
 git clone https://github.com/your-username/habit-tracker.git
 cd habit-tracker
 
-# 2. Создайте и активируйте виртуальное окружение
+# 2. Установите зависимости
+
+# Вариант A: через uv (рекомендуется)
+uv sync
+
+# Вариант B: через стандартное venv + pip
 python -m venv venv
 
 # Для Windows:
@@ -77,11 +81,20 @@ venv\Scripts\activate
 # Для macOS / Linux:
 source venv/bin/activate
 
-# 3. Установите зависимости
-pip install -r requirements.txt
+pip install -e .
 
-# 4. Запустите сервер разработки Uvicorn
-uvicorn src.main:app --reload
+# 3. Запустите сервер разработки Uvicorn
+
+# Если использовали uv:
+uv run uvicorn habittracker.main:app --reload
+
+# Если использовали venv + pip:
+uvicorn habittracker.main:app --reload
+```
+Если пакет не установлен в окружение, можно запустить приложение напрямую из src:
+
+```bash
+uvicorn src.habittracker.main:app --reload
 ```
 
 ---
@@ -139,23 +152,28 @@ curl -X 'POST' 'http://localhost:8000/setup_database' -H 'accept: application/js
 ## 📂 Структура проекта
 ```
 habit_tracker/
-├── database
-│   ├── __init__.py
-│   └── function.py
 ├── Dockerfile
 ├── index.html
+├── pyproject.toml
 ├── README.md
-├── requirements.txt
-├── src
-│   ├── api
-│   │   ├── __init__.py
-│   │   ├── dependencies.py
-│   │   ├── function.py
-│   │   └── habits.py
-│   ├── database.py
-│   ├── main.py
-│   ├── models
-│   │   └── habits.py
-│   └── schemas
-│       └── habits.py
+├── uv.lock
+└── src/
+    └── habittracker/
+        ├── __init__.py
+        ├── main.py
+        ├── api/
+        │   ├── __init__.py
+        │   ├── dependencies.py
+        │   ├── function.py
+        │   └── habits.py
+        ├── database/
+        │   ├── __init__.py
+        │   ├── db.py
+        │   └── function.py
+        ├── models/
+        │   ├── __init__.py
+        │   └── habits.py
+        └── schemas/
+            ├── __init__.py
+            └── habits.py
 ```
