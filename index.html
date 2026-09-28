@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #4f46e5, #06b6d4); min-height: 100vh; color: #222; }
+        .container { width: 1100px; max-width: 95%; margin: 40px auto; }
+        header { display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 30px; }
+        header h1 { font-size: 34px; }
+        header p { opacity: .8; }
+        .card { background: white; border-radius: 18px; padding: 25px; box-shadow: 0 20px 50px rgba(0, 0, 0, .15); }
+        form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        input, textarea { border: 2px solid transparent; background: #f2f5fa; border-radius: 12px; padding: 14px; font-size: 15px; width: 100%; transition: border-color 0.2s ease; }
+        input[type="date"] { cursor: pointer; }
+        input:focus, textarea:focus { outline: none; border-color: #4f46e5; }
+        input.invalid { border-color: #ef4444 !important; background-color: #fef2f2; }
+        .error-message { color: #ef4444; font-size: 12px; font-weight: 500; display: none; align-items: center; gap: 4px; }
+        button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 22px; font-weight: 600; transition: .2s; height: 50px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .btn-primary { background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); }
+        .btn-secondary { background: #cbd5e1; color: #1e293b; }
+        .btn-secondary:hover { background: #b4c6ef; }
+        .btn-danger { background: #fee2e2; color: #ef4444; margin-top: 15px; width: 100%; }
+        .btn-danger:hover { background: #fecaca; }
+
+        .stats { display: flex; gap: 20px; margin: 25px 0; }
+        .stat { flex: 1; background: white; border-radius: 18px; padding: 18px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .08); }
+        .stat h2 { color: #4f46e5; font-size: 30px; }
+
+        #habits { display: grid; gap: 18px; }
+        .habit { background: white; border-radius: 18px; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(0, 0, 0, .08); transition: all 0.3s ease; }
+        .left { flex: 1; }
+        .left h3 { margin-bottom: 6px; }
+        .desc { color: #666; margin-bottom: 8px; }
+        .date { font-size: 13px; color: #999; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+
+        .icon-btn { width: 42px; height: 42px; border-radius: 10px; font-size: 16px; color: white; display: flex; justify-content: center; align-items: center; transition: .2s; }
+        .icon-btn:hover { opacity: 0.8; transform: scale(1.05); }
+        .edit { background: #0ea5e9; }
+        .delete { background: #ef4444; }
+        .stats-btn { background: #8b5cf6; }
+        .check-done { background: #10b981; }
+        .check-notdone { background: #cbd5e1; color: #64748b; }
+        .done { border-left: 8px solid #10b981; }
+        .notdone { border-left: 8px solid #ef4444; }
+
+        .empty { background: white; text-align: center; padding: 60px; border-radius: 18px; color: #666; }
+        .empty i { font-size: 48px; color: #a1a1aa; margin-bottom: 15px; }
+
+        footer { text-align: center; margin-top: 35px; margin-bottom: 20px; color: white; opacity: .8; font-size: 14px;}
+        footer a { color: white; text-decoration: underline; cursor: pointer; margin-left: 10px; }
+        footer a:hover { color: #fecaca; }
+
+        /* Модальные окна */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fefefe; padding: 30px; border-radius: 18px; width: 600px; max-width: 90%; box-shadow: 0 15px 40px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto;}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 24px; color: #4f46e5; }
+        .close-modal { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; background: none; border: none; padding: 0; height: auto; }
+        .close-modal:hover { color: #ef4444; }
+        #editForm { grid-template-columns: 1fr; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+
+        /* Стили для окна статистики */
+        .date-filters { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
+        .date-filters .input-group { flex: 1; }
+        .stats-results { background: #f8fafc; border-radius: 12px; padding: 15px; min-height: 100px; max-height: 250px; overflow-y: auto; }
+        .checkin-item { padding: 10px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px; }
+        .checkin-item:last-child { border-bottom: none; }
+        .checkin-item i { color: #10b981; }
+
+        @media (max-width: 800px) { form { grid-template-columns: 1fr; } .habit { flex-direction: column; align-items: flex-start; gap: 20px; } .actions { width: 100%; justify-content: flex-end; } .stats { flex-direction: column; } .modal-content { width: 95%; } .date-filters { flex-direction: column; align-items: stretch; } }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div>
+                <h1><i class="fa-solid fa-leaf" style="color: #10b981; margin-right: 8px;"></i> Habit Tracker</h1>
+                <p>Базовый трекер привычек</p>
+            </div>
+        </header>
+
+        <div class="card" style="margin-bottom: 25px;">
+            <form id="addHabitForm">
+                <div class="input-group">
+                    <input id="addName" placeholder="Название привычки" required>
+                    <!-- Динамический текст ошибки -->
+                    <div id="addNameError" class="error-message">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="addNameErrorText">Ошибка</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input id="addDescription" placeholder="Краткое описание">
+                </div>
+
+                <button id="addBtn" class="btn-primary" type="submit">
+                    <i class="fa-solid fa-plus"></i> Добавить
+                </button>
+            </form>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <h2 id="total">0</h2>
+                <div>Всего</div>
+            </div>
+            <div class="stat">
+                <h2 id="completed">0</h2>
+                <div>Отмечены сегодня</div>
+            </div>
+            <div class="stat">
+                <h2 id="active">0</h2>
+                <div>Осталось</div>
+            </div>
+        </div>
+
+        <div id="habits"></div>
+
+        <footer>
+            Habit Tracker • localhost:8000
+            <a onclick="setupDatabase()">[Сбросить и пересоздать БД]</a>
+        </footer>
+    </div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Редактировать привычку</h2>
+                <button class="close-modal" onclick="closeModal('editModal')">&times;</button>
+            </div>
+
+            <form id="editForm">
+                <input type="hidden" id="editHabitId">
+
+                <div class="input-group">
+                    <input id="editName" placeholder="Название привычки" required>
+                    <div id="editNameError" class="error-message">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="editNameErrorText">Ошибка</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <textarea id="editDescription" placeholder="Краткое описание" rows="2" style="resize: vertical;"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editModal')">Отмена</button>
+                    <button id="editBtn" class="btn-primary" type="submit">
+                        <i class="fa-solid fa-save"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #e2e8f0;">
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 5px;">Продвинутое удаление (по дате создания):</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="date" id="deleteByDateInput" style="flex: 1;">
+                <button type="button" class="btn-danger" style="margin: 0; width: auto;" onclick="deleteHabitByDate()">
+                    Удалить по дате
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- МОДАЛЬНОЕ ОКНО СТАТИСТИКИ -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>История отметок</h2>
+                <button class="close-modal" onclick="closeModal('statsModal')">&times;</button>
+            </div>
+
+            <input type="hidden" id="statsHabitId">
+
+            <div class="date-filters">
+                <div class="input-group">
+                    <label style="font-size: 13px; color: #666;">От даты:</label>
+                    <input type="date" id="statsDateFrom" required>
+                </div>
+                <div class="input-group">
+                    <label style="font-size: 13px; color: #666;">До даты:</label>
+                    <input type="date" id="statsDateTo" required>
+                </div>
+                <button type="button" class="btn-primary" style="height: 52px;" onclick="fetchHabitStats()">
+                    <i class="fa-solid fa-magnifying-glass"></i> Искать
+                </button>
+            </div>
+
+            <div class="stats-results" id="statsResultsContainer">
+                <div style="text-align: center; color: #94a3b8; margin-top: 20px;">
+                    Укажите даты и нажмите "Искать"
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const API = "http://localhost:8000"; // Базовый URL
+        const FORBIDDEN_SYMBOLS_REGEX = /[!@#$%^&*=+;~\-]/;
+        const MULTIPLE_SPACES_REGEX = /\s{2,}/;
+
+        // --- УЛУЧШЕННАЯ ВАЛИДАЦИЯ ---
+        function validateInput(inputElement, errorContainer, errorTextElement, submitBtnElement) {
+            const value = inputElement.value;
+
+            let errorMessage = "";
+            if (FORBIDDEN_SYMBOLS_REGEX.test(value)) {
+                errorMessage = "Нельзя использовать спецсимволы: ! @ # $ % ^ & * = + - ; ~";
+            } else if (MULTIPLE_SPACES_REGEX.test(value)) {
+                errorMessage = "Название не должно содержать несколько пробелов подряд";
+            }
+
+            if (errorMessage) {
+                inputElement.classList.add("invalid");
+                errorTextElement.innerText = errorMessage;
+                errorContainer.style.display = "flex";
+                submitBtnElement.disabled = true;
+                return false;
+            } else {
+                inputElement.classList.remove("invalid");
+                errorContainer.style.display = "none";
+                submitBtnElement.disabled = false;
+                return true;
+            }
+        }
+
+        const addNameInput = document.getElementById("addName");
+        const addNameError = document.getElementById("addNameError");
+        const addNameErrorText = document.getElementById("addNameErrorText");
+        const addBtn = document.getElementById("addBtn");
+
+        addNameInput.addEventListener("input", () => {
+            validateInput(addNameInput, addNameError, addNameErrorText, addBtn);
+        });
+
+        const editNameInput = document.getElementById("editName");
+        const editNameError = document.getElementById("editNameError");
+        const editNameErrorText = document.getElementById("editNameErrorText");
+        const editBtn = document.getElementById("editBtn");
+
+        editNameInput.addEventListener("input", () => {
+            validateInput(editNameInput, editNameError, editNameErrorText, editBtn);
+        });
+
+
+        // --- УПРАВЛЕНИЕ ОКНАМИ ---
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = "flex";
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+
+            if (modalId === 'editModal') {
+                document.getElementById("editForm").reset();
+                editNameInput.classList.remove("invalid");
+                editNameError.style.display = "none";
+                editBtn.disabled = false;
+            } else if (modalId === 'statsModal') {
+                document.getElementById("statsResultsContainer").innerHTML = "";
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+
+        // --- ОСНОВНАЯ ЛОГИКА ---
+        async function loadHabits() {
+            try {
+                const res = await fetch(`${API}/habits`);
+                if (!res.ok) throw new Error("Ошибка сети");
+                const habits = await res.json();
+                render(habits);
+            } catch (error) {
+                console.error("Ошибка загрузки:", error);
+            }
+        }
+
+        function render(habits) {
+            const container = document.getElementById("habits");
+            container.innerHTML = "";
+
+            document.getElementById("total").innerText = habits.length;
+
+            const completed = habits.filter(h => h.checking).length;
+            document.getElementById("completed").innerText = completed;
+            document.getElementById("active").innerText = habits.length - completed;
+
+            if (habits.length === 0) {
+                container.innerHTML = `
+                <div class="empty">
+                    <i class="fa-solid fa-seedling"></i>
+                    <h2>Пока нет привычек</h2>
+                    <p>Добавьте первую привычку выше</p>
+                </div>`;
+                return;
+            }
+
+            habits.forEach(h => {
+                const div = document.createElement("div");
+                div.className = "habit " + (h.checking ? "done" : "notdone");
+
+                div.innerHTML = `
+                <div class="left">
+                    <h3 style="${h.checking ? 'text-decoration: line-through; color: #9ca3af;' : ''}">${h.name}</h3>
+                    <div class="desc" style="${h.checking ? 'text-decoration: line-through; color: #9ca3af;' : ''}">
+                        ${h.description || ""}
+                    </div>
+                    <div class="date">
+                        <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Создано: ${h.date_created_habit || "-"}
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="icon-btn ${h.checking ? 'check-done' : 'check-notdone'}" onclick="toggleHabit(${h.id})" title="Отметить (Сегодня)">
+                        ${h.checking ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-minus"></i>'}
+                    </button>
+
+                    <button class="icon-btn stats-btn" onclick="openStatsModal(${h.id})" title="Статистика">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </button>
+
+                    <button class="icon-btn edit" onclick="editHabit(${h.id})" title="Редактировать">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+
+                    <button class="icon-btn delete" onclick="deleteHabit(${h.id})" title="Удалить">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>`;
+
+                container.appendChild(div);
+            });
+        }
+
+        // --- РОУТЫ ---
+
+        // POST /setup_database
+        async function setupDatabase() {
+            if (!confirm("ВНИМАНИЕ! Это удалит все текущие данные и пересоздаст таблицы. Продолжить?")) return;
+            try {
+                await fetch(`${API}/setup_database`, { method: "POST" });
+                alert("База данных успешно пересоздана!");
+                loadHabits();
+            } catch (error) {
+                alert("Ошибка при сбросе БД");
+            }
+        }
+
+        // POST /habits
+        document.getElementById("addHabitForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!validateInput(addNameInput, addNameError, addNameErrorText, addBtn)) return;
+
+            const body = {
+                name: addNameInput.value.trim(),
+                description: document.getElementById("addDescription").value.trim()
+            };
+
+            try {
+                const res = await fetch(`${API}/habits`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+
+                if (res.status === 409) {
+                    alert("Привычка с таким именем уже существует!");
+                    return;
+                }
+
+                e.target.reset();
+                loadHabits();
+            } catch (error) {
+                console.error("Ошибка добавления:", error);
+            }
+        });
+
+
+        // PUT /habits/{habit_id}
+        document.getElementById("editForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!validateInput(editNameInput, editNameError, editNameErrorText, editBtn)) return;
+
+            const id = document.getElementById("editHabitId").value;
+            const body = {
+                name: editNameInput.value.trim(),
+                description: document.getElementById("editDescription").value.trim()
+            };
+
+            try {
+                await fetch(`${API}/habits/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body)
+                });
+                closeModal('editModal');
+                loadHabits();
+            } catch (error) {
+                console.error("Ошибка сохранения изменений:", error);
+            }
+        });
+
+        // GET /habits/{habit_id} (Загрузка для редактирования)
+        async function editHabit(id) {
+            try {
+                const res = await fetch(`${API}/habits/${id}`);
+                const h = await res.json();
+
+                document.getElementById("editHabitId").value = h.id;
+                editNameInput.value = h.name;
+                document.getElementById("editDescription").value = h.description;
+                document.getElementById("deleteByDateInput").value = h.date_created_habit || "";
+
+                validateInput(editNameInput, editNameError, editNameErrorText, editBtn);
+                openModal('editModal');
+            } catch (error) {
+                console.error("Ошибка при получении данных:", error);
+            }
+        }
+
+        // POST /habits/{habit_id}/checkins
+        async function toggleHabit(id) {
+            try {
+                await fetch(`${API}/habits/${id}/checkins`, { method: "POST" });
+                loadHabits();
+            } catch (error) {
+                console.error("Ошибка изменения статуса:", error);
+            }
+        }
+
+        // DELETE /habits/{habit_id}
+        async function deleteHabit(id) {
+            if (!confirm("Удалить привычку полностью?")) return;
+            try {
+                await fetch(`${API}/habits/${id}`, { method: "DELETE" });
+                loadHabits();
+            } catch (error) {
+                console.error("Ошибка удаления:", error);
+            }
+        }
+
+        // DELETE /habits/{habit_id}/checkins?date=YYYY-MM-DD
+        async function deleteHabitByDate() {
+            const id = document.getElementById("editHabitId").value;
+            const dateVal = document.getElementById("deleteByDateInput").value;
+
+            if (!dateVal) {
+                alert("Укажите дату для удаления!");
+                return;
+            }
+            if (!confirm(`Точно удалить привычку, созданную ${dateVal}?`)) return;
+
+            try {
+                const res = await fetch(`${API}/habits/${id}/checkins?date=${dateVal}`, {
+                    method: "DELETE"
+                });
+
+                if (res.status === 404) {
+                    alert(`Привычка с ID ${id} и датой создания ${dateVal} не найдена.`);
+                    return;
+                }
+
+                closeModal('editModal');
+                loadHabits();
+            } catch (error) {
+                console.error("Ошибка удаления по дате:", error);
+            }
+        }
+
+        // --- ЛОГИКА СТАТИСТИКИ ---
+
+        function openStatsModal(id) {
+            document.getElementById("statsHabitId").value = id;
+
+            // Ставим даты по умолчанию (От: 7 дней назад, До: сегодня)
+            const today = new Date();
+            const weekAgo = new Date();
+            weekAgo.setDate(today.getDate() - 7);
+
+            document.getElementById("statsDateTo").value = today.toISOString().split('T')[0];
+            document.getElementById("statsDateFrom").value = weekAgo.toISOString().split('T')[0];
+
+            document.getElementById("statsResultsContainer").innerHTML = `
+                <div style="text-align: center; color: #94a3b8; margin-top: 20px;">
+                    Укажите даты и нажмите "Искать"
+                </div>`;
+
+            openModal('statsModal');
+        }
+
+        // GET /habits/{habit_id}/stats
+        async function fetchHabitStats() {
+            const id = document.getElementById("statsHabitId").value;
+            const dateFrom = document.getElementById("statsDateFrom").value;
+            const dateTo = document.getElementById("statsDateTo").value;
+            const container = document.getElementById("statsResultsContainer");
+
+            if (!dateFrom || !dateTo) {
+                alert("Пожалуйста, заполните обе даты");
+                return;
+            }
+
+            container.innerHTML = `<div style="text-align:center; padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</div>`;
+
+            try {
+                // query параметры как в FastAPI: ?date_from=...&date_to=...
+                const res = await fetch(`${API}/habits/${id}/stats?date_from=${dateFrom}&date_to=${dateTo}`);
+                const data = await res.json();
+
+                if (data.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color: #64748b; margin-top: 20px;">За этот период отметок не найдено.</div>`;
+                    return;
+                }
+
+                let html = "";
+                data.forEach(checkin => {
+                    html += `
+                    <div class="checkin-item">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>${checkin.checkins_date}</span>
+                    </div>`;
+                });
+
+                container.innerHTML = html;
+
+            } catch (error) {
+                console.error("Ошибка загрузки статистики:", error);
+                container.innerHTML = `<div style="text-align:center; color: #ef4444; margin-top: 20px;">Ошибка загрузки данных</div>`;
+            }
+        }
+
+        // Инициализация
+        loadHabits();
+    </script>
+</body>
+
+</html>

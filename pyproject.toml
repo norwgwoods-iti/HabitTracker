@@ -1,0 +1,29 @@
+[project]
+name = "habittracker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "norwgwoods-iti", email = "norwgwoods@gmail.com" }
+]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]",
+    "sqlalchemy[asyncio]",
+    "psycopg",
+#    "aiosqlite",
+    "pydantic",
+    "python-multipart",
+    "jinja2",
+    "python-dotenv",
+    "apscheduler",
+    "starlette>=1.7.0",
+]
+
+[project.scripts]
+habittracker = "habittracker:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"
