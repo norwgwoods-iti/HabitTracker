@@ -1,19 +1,18 @@
 import contextlib
 
-import logging
-
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from habittracker.api import main_router
+from habittracker.database.db import create_tables
 
 from src.habittracker.database.function import update_database
 
-from src.habittracker.database.db import engine, new_session, Base
+from src.habittracker.database.db import engine, new_session, Base, create_database
 
-logger = logging.getLogger(__name__)
+
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,11 +22,8 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(update_database, 'cron', hour=00, minute=00, args=[new_session])
     scheduler.start()
 
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        logger.info('База данных создана')
-
+    await create_database()
+    await create_tables()
 
     yield
 
