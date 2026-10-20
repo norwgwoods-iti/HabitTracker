@@ -133,7 +133,7 @@ async def update_habits(habit_id: int, habit_data: HabitAddSchema, session: Sess
 
 """ POST Toggle """
 @router.post("/habits/{habit_id}/checkins",
-              include_in_schema=False)
+              )
 async def toggle_habit(habit_id: int, session: SessionDep):
 
     habit = await get_habit_function(session=session, id=habit_id, model=HabitModel)
@@ -181,12 +181,13 @@ async def delete_habit_with_date(
 ):
     # !!!!!!
     query = delete(CheckinHabitModel).where(
-        CheckinHabitModel.id == habit_id,
+        CheckinHabitModel.id_habit == habit_id,
         CheckinHabitModel.checkins_date == date
     )
     # !!!!!!
 
     result = await session.execute(query)
+
 
     if result.rowcount == 0:
         raise HTTPException(
